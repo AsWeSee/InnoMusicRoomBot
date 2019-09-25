@@ -58,7 +58,7 @@ namespace InnoMusicRoomBot
             switch (e.Message.Text)
             {
                 case "/book":
-                    BookCommand.PerformAnswer(e.Message, mainbot);
+                    BookCommand.ReplyWithSchedule(e.Message, mainbot);
                     break;
                 case "/cancel":
                     CancelCommand.PerformAnswer(e.Message, mainbot);
@@ -80,6 +80,7 @@ namespace InnoMusicRoomBot
                 case "Пт":
                 case "Сб":
                 case "Вс":
+                    BookCommand.ReplyWithTimeInput(e.Message, mainbot);
                     break;
             }
 
@@ -103,13 +104,6 @@ namespace InnoMusicRoomBot
             //    "Check sendMessage method",
             //    "https://core.telegram.org/bots/api#sendmessage"
             //  ))
-            //);
-            //// Message to a private chat having a 2-row reply keyboard
-            //await bot.SendTextMessageAsync(
-            //  chatId: adminChat,
-            //  text: "adminChat your contact & location",
-            //  replyMarkup: new ReplyKeyboardMarkup(
-            //    new[] { KeyboardButton.WithRequestContact("Share Contact"), KeyboardButton.WithRequestLocation("Share Location") })
             //);
             //string testx = x.Text;
             //string testx3 = x.ToString();
