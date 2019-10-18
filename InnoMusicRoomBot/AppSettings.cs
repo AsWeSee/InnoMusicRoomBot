@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 
 namespace InnoMusicRoomBot
 {
@@ -30,6 +31,10 @@ namespace InnoMusicRoomBot
             new MainBot();
             new AdminBot();
             Console.WriteLine("post bot run");
+            using (var db = new MobileContext())
+            {
+                db.Database.Migrate();
+            }
         }
         public static IConfiguration AppConfiguration { get; set; }
         public static bool isDevEnvironment { get; set; }

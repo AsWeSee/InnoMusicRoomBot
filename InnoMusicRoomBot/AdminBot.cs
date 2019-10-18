@@ -33,6 +33,7 @@ namespace InnoMusicRoomBot
             );
 
             adminbot.OnMessage += AdminBot_OnMessage;
+            adminbot.OnReceiveError += Bot_OnError;
             adminbot.StartReceiving();
         }
 
@@ -40,9 +41,29 @@ namespace InnoMusicRoomBot
         {
             if (adminbot != null)
             {
+                try
+                {
+                    Message adminlog = await adminbot.SendTextMessageAsync(
+                      chatId: adminChat,
+                      text: $"@{m.From.Username}:\n" + m.Text
+                    );
+                } catch (Exception ex)
+                {
+                    Console.WriteLine("Error to log to admin bot");
+                }
+            }
+        }
+        void Bot_OnError(object sender, ReceiveErrorEventArgs e)
+        {
+            AdminBot.adminLog("error " + e.ApiRequestException.Message);
+        }
+        public static async void adminLog(String s)
+        {
+            if (adminbot != null)
+            {
                 Message adminlog = await adminbot.SendTextMessageAsync(
                   chatId: adminChat,
-                  text: $"@{m.From.Username}:\n" + m.Text
+                  text: s
                 );
             }
         }
@@ -54,6 +75,10 @@ namespace InnoMusicRoomBot
               chatId: adminChat,
               text: $"Written to admin bot! @{e.Message.From.Username}:\n" + e.Message.Text
             );
+
+
+            Message mes = adminbot.SendTextMessageAsync(e.Message.Chat.Id, "Вы не админ", replyToMessageId: e.Message.MessageId).Result;
+            
         }
     }
 }

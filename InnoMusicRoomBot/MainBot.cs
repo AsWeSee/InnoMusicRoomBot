@@ -1,7 +1,9 @@
 ﻿using InnoMusicRoomBot.Commands;
+using InnoMusicRoomBot.Models;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -33,57 +35,103 @@ namespace InnoMusicRoomBot
             }
 
             User me = mainbot.GetMeAsync().Result;
-            Console.WriteLine(
-                  $"Hello, World! I am user №{me.Id}, alias {me.Username} and my name is {me.FirstName}."
-                );
+            Console.WriteLine($"Hello, World! I am user №{me.Id}, alias {me.Username} and my name is {me.FirstName}.");
 
-            mainbot.OnMessage += Bot_OnMessage;
+            mainbot.OnMessage += Bot_OnMessage; //TODO: Добавить сохранение отправленных картинок. прост по приколу
+            mainbot.OnCallbackQuery += Bot_OnCallbackQuery;
+            mainbot.OnReceiveError += Bot_OnError;
             mainbot.StartReceiving();
 
             //Этот процесс нужен для мониторинга жизнеспособности бота. Нет сообщений - бот отвалился.
             Thread countThread = new Thread(new ThreadStart(Count));
             countThread.Start();
         }
-        static async void Bot_OnMessage(object sender, MessageEventArgs e)
+
+        private void Bot_OnCallbackQuery(object sender, CallbackQueryEventArgs e)
         {
-            if (e.Message.Text == null)
-            {
+            CancelCommand.CallbackQuery(e, mainbot);
+        }
+
+        void Bot_OnMessage(object sender, MessageEventArgs e)
+        {
+            Message message = e.Message;
+            if (message.Text == null)
                 return;
-            }
-            Console.WriteLine($"Received a text message in chat {e.Message.Chat.Id}.");
+
             //Запись в админского бота с логом
+            Console.WriteLine($"@{message.From.Username}: " + message.Text);
+            AdminBot.adminLog(message);
 
-            AdminBot.adminLog(e.Message);
+            //проверка наличия человека в базе
+            Participant participant;
+            using (MobileContext db = new MobileContext())
+            {
+                //var parts = db.Participants.ToList();
+                //var books = db.Bookings.ToList();
+                //db.Bookings.Add(new Booking(books[0].Participant, DateTime.Now, DateTime.Now));
+                //db.SaveChanges();
+                //db.Participants.Add(new Participant("Виталий", "RunGiantBoom", new DateTime(2019, 12, 25, 12, 40, 20), "owner"));
+                //db.SaveChanges();
+                try
+                {
+                    participant = db.Participants.Single(c => c.Alias == message.From.Username);
+                }
+                catch (Exception ex)
+                {
+                    Message mes = mainbot.SendTextMessageAsync(message.Chat.Id, "Привет. Мы пока не знакомы. Напиши @RunGiantBoom чтобы получить доступ к музкомнате.", replyToMessageId: message.MessageId).Result;
+                    AdminBot.adminLog("Exception " + ex.Message);
+                    return;
+                }
+            }
 
-            switch (e.Message.Text)
+            //вызов команды при её наличии и выход из функции
+            switch (message.Text)
             {
                 case "/book":
-                    BookCommand.ReplyWithSchedule(e.Message, mainbot);
-                    break;
+                    BookCommand.ReplyWithImageSchedule(message, mainbot, participant);
+                    return;
+                case "/book_text_version":
+                    BookCommand.ReplyWithTextSchedule(message, mainbot);
+                    return;
                 case "/cancel":
-                    CancelCommand.PerformAnswer(e.Message, mainbot);
-                    break;
+                    CancelCommand.PerformAnswer(message, mainbot, participant);
+                    return;
                 case "/start":
-                    StartCommand.PerformAnswer(e.Message, mainbot);
-                    break;
+                    StartCommand.PerformAnswer(message, mainbot);
+                    return;
                 case "/help":
-                    HelpCommand.PerformAnswer(e.Message, mainbot);
-                    break;
+                    HelpCommand.PerformAnswer(message, mainbot);
+                    return;
                 case "/checkin":
-                    break;
+                    return;
                 case "/status":
-                    break;
+                    return;
                 case "Пн":
+                    BookCommand.ReplyWithTimeInput(message, mainbot, participant, 0);
+                    return;
                 case "Вт":
+                    BookCommand.ReplyWithTimeInput(message, mainbot, participant, 1);
+                    return;
                 case "Ср":
+                    BookCommand.ReplyWithTimeInput(message, mainbot, participant, 2);
+                    return;
                 case "Чт":
+                    BookCommand.ReplyWithTimeInput(message, mainbot, participant, 3);
+                    return;
                 case "Пт":
+                    BookCommand.ReplyWithTimeInput(message, mainbot, participant, 4);
+                    return;
                 case "Сб":
+                    BookCommand.ReplyWithTimeInput(message, mainbot, participant, 5);
+                    return;
                 case "Вс":
-                    BookCommand.ReplyWithTimeInput(e.Message, mainbot);
-                    break;
+                    BookCommand.ReplyWithTimeInput(message, mainbot, participant, 6);
+                    return;
+                default:
+                    //Если команды в сообщении не было, значит пытаемся распарсить время и создать бронь
+                    TextInputCommand.Book(message, mainbot, participant);
+                    return;
             }
-
 
             //commands.Add(new HelloCommand());
             //Update[] updates = bot.GetUpdatesAsync().Result;
@@ -95,26 +143,16 @@ namespace InnoMusicRoomBot
             //        command.Execute(update.Message, bot);
             //    }
             //}
-
-
-            //Message x2 = await bot.SendTextMessageAsync(
-            //  chatId: adminChat,
-            //  text: $" still to admin: someone said:\n" + e.Message.Text,
-            //  replyMarkup: new InlineKeyboardMarkup(InlineKeyboardButton.WithUrl(
-            //    "Check sendMessage method",
-            //    "https://core.telegram.org/bots/api#sendmessage"
-            //  ))
-            //);
-            //string testx = x.Text;
-            //string testx3 = x.ToString();
-
+        }
+        void Bot_OnError(object sender, ReceiveErrorEventArgs e)
+        {
+            AdminBot.adminLog("error " + e.ApiRequestException.Message);
         }
 
-        public static void Count()
+        public void Count()
         {
             for (int i = 0; i < 10000; i++)
             {
-                // int.MaxValue в микросекундах это 24,86 дня
                 try
                 {
                     Message mes = mainbot.SendTextMessageAsync(adminChat, $"check {i}").Result;
@@ -125,7 +163,8 @@ namespace InnoMusicRoomBot
                     Console.WriteLine(e.Message);
                 }
                 Console.WriteLine($"Count check {i}");
-                Thread.Sleep(600 * 1000);
+                // int.MaxValue в микросекундах это 24,86 дня
+                Thread.Sleep(60 * 1000);
             }
         }
     }
