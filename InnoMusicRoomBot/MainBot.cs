@@ -164,7 +164,8 @@ namespace InnoMusicRoomBot
                 }
                 Console.WriteLine($"Count check {i}");
                 // int.MaxValue в микросекундах это 24,86 дня
-                Thread.Sleep(60 * 1000);
+                // 5 * 60 * 1000 это 5 минут
+                Thread.Sleep(5 * 60 * 1000);
             }
         }
     }
