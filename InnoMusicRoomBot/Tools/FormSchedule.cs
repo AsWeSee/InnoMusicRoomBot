@@ -31,12 +31,11 @@ namespace InnoMusicRoomBot.Tools
             //var form = File.OpenRead("schedule_form.png");
 
             Color lightGreen = Color.FromArgb(255, 123, 209, 72);
-            Color blue = Color.LightBlue;
             Pen pen = new Pen(Color.Green, 3);
             SolidBrush lightGreenbrush = new SolidBrush(lightGreen);
-            SolidBrush requesterBrush = new SolidBrush(blue);
-            SolidBrush squareBrush;
-            SolidBrush redbrush = new SolidBrush(blue); ;
+            SolidBrush requesterBrush = new SolidBrush(Color.LightBlue);
+            SolidBrush bookingBrush;
+            SolidBrush redbrush = new SolidBrush(Color.Red); ;
             SolidBrush black = new SolidBrush(Color.Black);
             Font font = new Font(FontFamily.GenericSansSerif, 10);
 
@@ -52,19 +51,16 @@ namespace InnoMusicRoomBot.Tools
                 foreach (var booking in bookings)
                 {
                     if (booking.Participant.Alias.Equals(participant.Alias))
-                        squareBrush = requesterBrush;
+                        bookingBrush = requesterBrush;
                     else
-                        squareBrush = lightGreenbrush;
+                        bookingBrush = lightGreenbrush;
 
                     day = BookCommand.dayOfWeekInt(booking.TimeStart);
                     int ylength = (int)(ysize * (booking.TimeEnd.Subtract(booking.TimeStart).TotalMinutes / (float)60));
                     int xcorner = xbase + xsize * day;
                     int ycorner = ybase + (int)(ysize * (booking.TimeStart.Hour - 7) + (booking.TimeStart.Minute / (float)60));
-                    graphics.FillRectangle(squareBrush, xcorner, ycorner, xsize - 10, ylength - 5);
+                    graphics.FillRectangle(bookingBrush, xcorner, ycorner, xsize - 10, ylength - 5);
 
-
-                    int nowycorner = ybase + (int)(ysize * (DateTime.Now.Hour - 7) + (DateTime.Now.Minute / (float)60));
-                    graphics.FillRectangle(redbrush, xcorner, nowycorner, xsize, 2);
 
                     string caption = booking.Participant.Alias;
                     if (booking.TimeEnd.Subtract(booking.TimeStart).TotalHours > 1)
@@ -75,6 +71,11 @@ namespace InnoMusicRoomBot.Tools
                     graphics.DrawString(caption + booking.TimeStart.ToString("HH:mm") + " " + booking.TimeEnd.ToString("HH:mm"), font, black, xcorner + 2, ycorner + 2);
                     _ = $"{booking.Participant.Alias} {booking.TimeStart} {booking.TimeEnd}\n";
                 }
+
+                int nowxcorner = xbase + xsize * BookCommand.dayOfWeekInt(DateTime.Today);
+                int nowycorner = (int)(ybase + ysize * ((DateTime.Now.Hour - 7) + (DateTime.Now.Minute / (float)60)));
+                graphics.FillRectangle(redbrush, nowxcorner, nowycorner, xsize, 2);
+
             }
 
             //TODO: Костыль. Переделать без сохранения в файл
