@@ -23,10 +23,7 @@ namespace InnoMusicRoomBot.Commands
             //После чего вывести инлайном клавиатуру со списком броней
             //поймать колбэк запроса
 
-            DateTime now = DateTime.Today;
-            int daynum = BookCommand.dayOfWeekInt(now);
-
-            DateTime weekStart = now.AddDays(-daynum);
+            DateTime weekStart = BookCommand.weekStartDateForBooking();
             DateTime weekEnd = weekStart.AddDays(+7);
 
             List<InlineKeyboardButton> buttons = new List<InlineKeyboardButton>();

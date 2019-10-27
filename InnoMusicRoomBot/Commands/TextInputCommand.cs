@@ -59,10 +59,10 @@ namespace InnoMusicRoomBot.Commands
                 AdminBot.adminLog("Время начала раньше 7 утра.");
                 return;
             }
-            if (startDateTime.Hour >= 22 && startDateTime.Minute >= 30)
+            if (startDateTime.Hour > 22 || (startDateTime.Hour == 22 && startDateTime.Minute >= 50))
             {
-                Message mes = bot.SendTextMessageAsync(message.Chat.Id, "Время начала позже 22:30. (Время работы спорткомплекса: с 7:00 до 23:00)", replyToMessageId: message.MessageId).Result;
-                AdminBot.adminLog("Время начала позже 22:30.");
+                Message mes = bot.SendTextMessageAsync(message.Chat.Id, "Время начала позже 22:50. (Время работы спорткомплекса: с 7:00 до 23:00)", replyToMessageId: message.MessageId).Result;
+                AdminBot.adminLog("Время начала позже 22:50.");
                 return;
             }
             if (endDateTime.Hour < 7)
@@ -71,10 +71,10 @@ namespace InnoMusicRoomBot.Commands
                 AdminBot.adminLog("Время завершения раньше 7 утра.");
                 return;
             }
-            if (endDateTime.Hour >= 22 && endDateTime.Minute > 30)
+            if (endDateTime.Hour > 22 || (endDateTime.Hour == 22 && endDateTime.Minute > 50))
             {
-                Message mes = bot.SendTextMessageAsync(message.Chat.Id, "Время завершения позже 22:30. (Время работы спорткомплекса: с 7:00 до 23:00)\n\nПо просьбе руководства спорткомплекса музкомната освобождается за пол часа до закрытия ск.", replyToMessageId: message.MessageId).Result;
-                AdminBot.adminLog("Время завершения позже 22:30.");
+                Message mes = bot.SendTextMessageAsync(message.Chat.Id, "Время завершения позже 22:50. (Время работы спорткомплекса: с 7:00 до 23:00)\n\nПо просьбе руководства спорткомплекса музкомната освобождается до закрытия ск.", replyToMessageId: message.MessageId).Result;
+                AdminBot.adminLog("Время завершения позже 22:50.");
                 return;
             }
 

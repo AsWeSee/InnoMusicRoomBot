@@ -51,14 +51,10 @@ namespace InnoMusicRoomBot.Commands
             var chatId = message.Chat.Id;
             var messageId = message.MessageId;
 
-            // Берём начало недели.
-            DateTime now = DateTime.Today;
-            int daynum = dayOfWeekInt(now);
-            DateTime selectedDay = now.AddDays(-daynum + selectedDateNum);
-
-            DateTime weekStart = now.AddDays(-daynum);
+            DateTime weekStart = BookCommand.weekStartDateForBooking();
             DateTime weekEnd = weekStart.AddDays(+7);
 
+            DateTime selectedDay = weekStart.AddDays(selectedDateNum);
 
             //Нужно получить доступное время для бронирования
             double freetime = maxHoursToBook(participant.Status);
@@ -93,6 +89,22 @@ namespace InnoMusicRoomBot.Commands
                 result -= 1;
 
             return result;
+        }
+        public static DateTime weekStartDateForBooking()
+        {
+            DateTime now = DateTime.UtcNow.AddHours(3);
+            int daynum = dayOfWeekInt(now);
+            DateTime weekStartTemp;
+            if (daynum == 6 && (now.Hour > 22 || (now.Hour == 22 && now.Minute >= 30)))
+            {
+                //если воскресенье после 22:30 значит показываем расписание на следующую неделю
+                weekStartTemp = now.AddDays(1);
+            }
+            else
+            {
+                weekStartTemp = now.AddDays(-daynum);
+            }
+            return new DateTime(weekStartTemp.Year, weekStartTemp.Month, weekStartTemp.Day);
         }
         public static int maxHoursToBook(string status)
         {

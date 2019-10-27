@@ -13,13 +13,6 @@ namespace InnoMusicRoomBot.Tools
     {
         public static FileStream FormScheduleImage(Participant participant)
         {
-            // Берём начало недели.
-            DateTime now = DateTime.Today;
-            int daynum = BookCommand.dayOfWeekInt(now);
-
-            DateTime weekStart = now.AddDays(-daynum);
-            DateTime weekEnd = weekStart.AddDays(+7);
-
             //60, 91, левый верхний угол
             //279, 91
             //498, 91
@@ -73,7 +66,7 @@ namespace InnoMusicRoomBot.Tools
                 }
 
                 int nowxcorner = xbase + xsize * BookCommand.dayOfWeekInt(DateTime.Today);
-                int nowycorner = (int)(ybase + ysize * ((DateTime.Now.Hour - 7) + (DateTime.Now.Minute / (float)60)));
+                int nowycorner = (int)(ybase + ysize * ((DateTime.Now.Hour - 7 + 3) + (DateTime.Now.Minute / (float)60))); // -7 сдвиг на 7 часов от старта календаря, +3 сдвиг на московское время
                 graphics.FillRectangle(redbrush, nowxcorner, nowycorner, xsize, 2);
 
             }
@@ -95,10 +88,7 @@ namespace InnoMusicRoomBot.Tools
 
         private static List<Models.Booking> getBookingsForWeek()
         {
-            DateTime now = DateTime.UtcNow;
-            int daynum = BookCommand.dayOfWeekInt(now);
-            DateTime weekStartTemp = now.AddDays(-daynum);
-            DateTime weekStart = new DateTime(weekStartTemp.Year, weekStartTemp.Month, weekStartTemp.Day);
+            DateTime weekStart = BookCommand.weekStartDateForBooking();
             DateTime weekEnd = weekStart.AddDays(+7);
 
             List<Models.Booking> bookings;
