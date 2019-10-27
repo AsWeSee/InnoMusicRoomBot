@@ -15,18 +15,21 @@ namespace InnoMusicRoomBot
         static ITelegramBotClient adminbot;
         public AdminBot()
         {
-            if (AppSettings.isDevEnvironment)
-            {
+            //Т.к разработка ведётся в россии, то без прокси бот работать не будет.
+            //if (AppSettings.isDevEnvironment)
+            //{
+                Console.WriteLine($"proxy enable");
                 ICredentials cread = new NetworkCredential(AppSettings.proxyLogin, AppSettings.proxyPassword);
                 WebProxy proxy = new WebProxy(AppSettings.proxyAddress, false, null, cread);
 
                 adminbot = new TelegramBotClient(AppSettings.adminKey, proxy);
-            }
-            else
-            {
-                adminbot = new TelegramBotClient(AppSettings.adminKey);
-            }
+            //}
+            //else
+            //{
+                //adminbot = new TelegramBotClient(AppSettings.adminKey);
+            //}
 
+            Console.WriteLine($"get me admin");
             User me2 = adminbot.GetMeAsync().Result;
             Console.WriteLine(
               $"Hello, World! I am user №{me2.Id}, alias {me2.Username} and my name is {me2.FirstName}."

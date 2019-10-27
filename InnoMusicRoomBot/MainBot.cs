@@ -22,18 +22,19 @@ namespace InnoMusicRoomBot
         public static List<Command> commands = new List<Command>();
         public MainBot()
         {
-            if (AppSettings.isDevEnvironment)
-            {
+            //if (AppSettings.isDevEnvironment)
+            //{
+                Console.WriteLine($"proxy enable");
                 ICredentials cread = new NetworkCredential(AppSettings.proxyLogin, AppSettings.proxyPassword);
                 WebProxy proxy = new WebProxy(AppSettings.proxyAddress, false, null, cread);
 
                 mainbot = new TelegramBotClient(AppSettings.mainKey, proxy);
-            }
-            else
-            {
-                mainbot = new TelegramBotClient(AppSettings.mainKey);
-            }
-
+            //}
+            //else
+            //{
+            //    mainbot = new TelegramBotClient(AppSettings.mainKey);
+            //}
+            Console.WriteLine($"get me main");
             User me = mainbot.GetMeAsync().Result;
             Console.WriteLine($"Hello, World! I am user №{me.Id}, alias {me.Username} and my name is {me.FirstName}.");
 
