@@ -46,10 +46,8 @@ namespace InnoMusicRoomBot
             {
                 try
                 {
-                    Message adminlog = await adminbot.SendTextMessageAsync(
-                      chatId: adminChat,
-                      text: $"@{m.From.Username}:\n" + m.Text
-                    );
+                    Message mes = adminbot.SendTextMessageAsync(adminChat, $"@{m.From.Username}:\n" + m.Text).Result;
+                    
                 } catch (Exception ex)
                 {
                     Console.WriteLine("Error to log to admin bot");
