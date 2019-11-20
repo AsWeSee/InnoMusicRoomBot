@@ -26,11 +26,15 @@ namespace InnoMusicRoomBot.Tools
             Color lightGreen = Color.FromArgb(255, 123, 209, 72);
             Pen pen = new Pen(Color.Green, 3);
             SolidBrush lightGreenbrush = new SolidBrush(lightGreen);
+            SolidBrush lightGraybrush = new SolidBrush(Color.LightGray);
+            SolidBrush payerbrush = new SolidBrush(lightGreen);
             SolidBrush requesterBrush = new SolidBrush(Color.LightBlue);
             SolidBrush bookingBrush;
             SolidBrush redbrush = new SolidBrush(Color.Red); ;
             SolidBrush black = new SolidBrush(Color.Black);
-            Font font = new Font(FontFamily.GenericSansSerif, 10);
+            Font currentFont;
+            Font fontSimple = new Font(FontFamily.GenericSansSerif, 10);
+            Font fontBold = new Font(FontFamily.GenericSansSerif, 10, FontStyle.Bold);
 
             int xbase = 48;
             int ybase = 73;
@@ -44,14 +48,20 @@ namespace InnoMusicRoomBot.Tools
                 foreach (var booking in bookings)
                 {
                     if (booking.Participant.Alias.Equals(participant.Alias))
-                        bookingBrush = requesterBrush;
+                        currentFont = fontBold;
                     else
-                        bookingBrush = lightGreenbrush;
+                        currentFont = fontSimple;
+
+                    if (booking.Participant.Status.Equals("free"))
+                        bookingBrush = lightGraybrush;
+                    else
+                        bookingBrush = payerbrush;
+
 
                     day = BookCommand.dayOfWeekInt(booking.TimeStart);
                     int ylength = (int)(ysize * (booking.TimeEnd.Subtract(booking.TimeStart).TotalMinutes / (float)60));
                     int xcorner = xbase + xsize * day;
-                    int ycorner = ybase + (int)(ysize * (booking.TimeStart.Hour - 7) + (booking.TimeStart.Minute / (float)60));
+                    int ycorner = ybase + (int)(ysize * ((booking.TimeStart.Hour - 7) + (booking.TimeStart.Minute / (float)60)));
                     graphics.FillRectangle(bookingBrush, xcorner, ycorner, xsize - 10, ylength - 5);
 
 
@@ -61,7 +71,7 @@ namespace InnoMusicRoomBot.Tools
                     else
                         caption += " ";
 
-                    graphics.DrawString(caption + booking.TimeStart.ToString("HH:mm") + " " + booking.TimeEnd.ToString("HH:mm"), font, black, xcorner + 2, ycorner + 2);
+                    graphics.DrawString(caption + booking.TimeStart.ToString("HH:mm") + " " + booking.TimeEnd.ToString("HH:mm"), currentFont, black, xcorner + 2, ycorner + 2);
                     _ = $"{booking.Participant.Alias} {booking.TimeStart} {booking.TimeEnd}\n";
                 }
 
