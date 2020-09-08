@@ -11,6 +11,7 @@ namespace InnoMusicRoomBot.Models
         public string Name { get; set; }
         public string Alias { get; set; }
         public DateTime SelectedDate { get; set; }
+        public bool SelectedCurrentWeek { get; set; }
         public string Status { get; set; }
         public List<Booking> Bookings { get; set; }
 

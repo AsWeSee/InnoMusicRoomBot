@@ -11,7 +11,7 @@ namespace InnoMusicRoomBot.Tools
 {
     public static class FormSchedule
     {
-        public static FileStream FormScheduleImage(Participant participant)
+        public static FileStream FormScheduleImage(Participant participant, bool currentWeek)
         {
             //60, 91, левый верхний угол
             //279, 91
@@ -44,7 +44,7 @@ namespace InnoMusicRoomBot.Tools
             using (var graphics = Graphics.FromImage(image))
             {
                 int day = 0;
-                var bookings = getBookingsForWeek();
+                var bookings = getBookingsForWeek(currentWeek);
                 foreach (var booking in bookings)
                 {
                     if (booking.Participant.Alias.Equals(participant.Alias))
@@ -88,7 +88,7 @@ namespace InnoMusicRoomBot.Tools
         public static string FormScheduleText()
         {
             string result = "";
-            var bookings = getBookingsForWeek();
+            var bookings = getBookingsForWeek(true);
             foreach (var booking in bookings)
             {
                 result += $"{booking.Participant.Alias} {booking.TimeStart} {booking.TimeEnd}\n";
@@ -96,9 +96,9 @@ namespace InnoMusicRoomBot.Tools
             return result;
         }
 
-        private static List<Models.Booking> getBookingsForWeek()
+        private static List<Models.Booking> getBookingsForWeek(bool currentWeek)
         {
-            DateTime weekStart = BookCommand.weekStartDateForBooking();
+            DateTime weekStart = BookCommand.weekStartDateForBooking(currentWeek);
             DateTime weekEnd = weekStart.AddDays(+7);
 
             List<Models.Booking> bookings;

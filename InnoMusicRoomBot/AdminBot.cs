@@ -16,18 +16,18 @@ namespace InnoMusicRoomBot
         public AdminBot()
         {
             //Т.к разработка ведётся в россии, то без прокси бот работать не будет.
-            //if (AppSettings.isDevEnvironment)
-            //{
+            if (AppSettings.isDevEnvironment)
+            {
                 Console.WriteLine($"proxy enable");
                 ICredentials cread = new NetworkCredential(AppSettings.proxyLogin, AppSettings.proxyPassword);
                 WebProxy proxy = new WebProxy(AppSettings.proxyAddress, false, null, cread);
 
                 adminbot = new TelegramBotClient(AppSettings.adminKey, proxy);
-            //}
-            //else
-            //{
-                //adminbot = new TelegramBotClient(AppSettings.adminKey);
-            //}
+            }
+            else
+            {
+                adminbot = new TelegramBotClient(AppSettings.adminKey);
+            }
 
             Console.WriteLine($"get me admin");
             User me2 = adminbot.GetMeAsync().Result;
@@ -47,8 +47,9 @@ namespace InnoMusicRoomBot
                 try
                 {
                     Message mes = adminbot.SendTextMessageAsync(adminChat, $"@{m.From.Username}:\n" + m.Text).Result;
-                    
-                } catch (Exception ex)
+
+                }
+                catch (Exception ex)
                 {
                     Console.WriteLine("Error to log to admin bot");
                 }
@@ -79,7 +80,7 @@ namespace InnoMusicRoomBot
 
 
             Message mes = adminbot.SendTextMessageAsync(e.Message.Chat.Id, "Вы не админ", replyToMessageId: e.Message.MessageId).Result;
-            
+
         }
     }
 }

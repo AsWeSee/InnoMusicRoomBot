@@ -118,7 +118,7 @@ namespace InnoMusicRoomBot.Commands
                 db.Bookings.Add(newEntry);
                 db.SaveChanges();
 
-                using (FileStream fs = FormSchedule.FormScheduleImage(participant))
+                using (FileStream fs = FormSchedule.FormScheduleImage(participant, participant.SelectedCurrentWeek))
                 {
                     Message mes = bot.SendPhotoAsync(chatId: chatId, photo: new InputOnlineFile(fs, "schedule.png"), caption: "Бронь установлена.", replyToMessageId: messageId).Result;
                 }

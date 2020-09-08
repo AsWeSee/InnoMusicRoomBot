@@ -23,17 +23,24 @@ namespace InnoMusicRoomBot.Commands
                     new KeyboardButton("Пт"),
                     new KeyboardButton("Сб"),
                     new KeyboardButton("Вс")}, true);
-        public static void ReplyWithImageSchedule(Message message, ITelegramBotClient client, Participant participant)
+        public static void ReplyWithImageSchedule(Message message, ITelegramBotClient client, Participant participant, bool currentWeek)
         {
             var chatId = message.Chat.Id;
             var messageId = message.MessageId;
 
             InputOnlineFile inputOnlineFile;
-            using (FileStream fs = FormSchedule.FormScheduleImage(participant))
+            using (FileStream fs = FormSchedule.FormScheduleImage(participant, currentWeek))
             {
-                String caption = $"Ваш статус: {participant.Status}\nДоступно {maxHoursToBook(participant.Status)} часов бронирования в день.";
+                String caption = $"Ваш статус: {participant.Status}\nДоступно {maxHoursToBook(participant.Status)} часов бронирования в день.\n\nЗелёным цветом выделены те, кто поддерживает музкомнату на patreon. Чтобы поддержать нас, переходите на https://www.patreon.com/InnoMusicRoom. В нём есть разные уровни поддержки с бонусами.";
                 inputOnlineFile = new InputOnlineFile(fs, "schedule.png");
                 Message mes = client.SendPhotoAsync(chatId: chatId, photo: inputOnlineFile, caption: caption, replyToMessageId: messageId, replyMarkup: reply).Result;
+            }
+
+            using (MobileContext db = new MobileContext())
+            {
+                participant.SelectedCurrentWeek = currentWeek;
+                db.Participants.Update(participant);
+                db.SaveChanges();
             }
         }
         public static void ReplyWithTextSchedule(Message message, ITelegramBotClient client)
@@ -51,7 +58,7 @@ namespace InnoMusicRoomBot.Commands
             var chatId = message.Chat.Id;
             var messageId = message.MessageId;
 
-            DateTime weekStart = BookCommand.weekStartDateForBooking();
+            DateTime weekStart = BookCommand.weekStartDateForBooking(participant.SelectedCurrentWeek);
             DateTime weekEnd = weekStart.AddDays(+7);
 
             DateTime selectedDay = weekStart.AddDays(selectedDateNum);
@@ -90,7 +97,7 @@ namespace InnoMusicRoomBot.Commands
 
             return result;
         }
-        public static DateTime weekStartDateForBooking()
+        public static DateTime weekStartDateForBooking(bool currentWeek)
         {
             DateTime now = DateTime.UtcNow.AddHours(3);
             int daynum = dayOfWeekInt(now);
@@ -104,6 +111,10 @@ namespace InnoMusicRoomBot.Commands
             {
                 weekStartTemp = now.AddDays(-daynum);
             }
+
+            if (!currentWeek)
+                weekStartTemp = weekStartTemp.AddDays(+7);
+
             return new DateTime(weekStartTemp.Year, weekStartTemp.Month, weekStartTemp.Day);
         }
         public static int maxHoursToBook(string status)
@@ -113,6 +124,9 @@ namespace InnoMusicRoomBot.Commands
                 case "Lord":
                     return 15;
                 case "Senior":
+                case "Investor":
+                case "Junior":
+                case "Middle":
                 case "payer":
                     return 5;
                 case "Freelance":

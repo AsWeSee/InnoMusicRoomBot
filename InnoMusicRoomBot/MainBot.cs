@@ -22,18 +22,19 @@ namespace InnoMusicRoomBot
         public static List<Command> commands = new List<Command>();
         public MainBot()
         {
-            //if (AppSettings.isDevEnvironment)
-            //{
+            if (AppSettings.isDevEnvironment)
+            {
                 Console.WriteLine($"proxy enable");
                 ICredentials cread = new NetworkCredential(AppSettings.proxyLogin, AppSettings.proxyPassword);
                 WebProxy proxy = new WebProxy(AppSettings.proxyAddress, false, null, cread);
 
                 mainbot = new TelegramBotClient(AppSettings.mainKey, proxy);
-            //}
-            //else
-            //{
-            //    mainbot = new TelegramBotClient(AppSettings.mainKey);
-            //}
+            }
+            else
+            {
+                Console.WriteLine($"proxy disable");
+                mainbot = new TelegramBotClient(AppSettings.mainKey);
+            }
             Console.WriteLine($"get me main");
             User me = mainbot.GetMeAsync().Result;
             Console.WriteLine($"Hello, World! I am user №{me.Id}, alias {me.Username} and my name is {me.FirstName}.");
@@ -67,7 +68,7 @@ namespace InnoMusicRoomBot
             Participant participant;
             using (MobileContext db = new MobileContext())
             {
-                //var parts = db.Participants.ToList();
+                var parts = db.Participants.ToList();
                 //var books = db.Bookings.ToList();
                 //db.Bookings.Add(new Booking(books[0].Participant, DateTime.Now, DateTime.Now));
                 //db.SaveChanges();
@@ -79,7 +80,8 @@ namespace InnoMusicRoomBot
                 }
                 catch (Exception ex)
                 {
-                    Message mes = mainbot.SendTextMessageAsync(message.Chat.Id, "Привет. Мы пока не знакомы. Напиши @RunGiantBoom чтобы получить доступ к музкомнате.", replyToMessageId: message.MessageId).Result;
+                    mainbot.SendTextMessageAsync(message.Chat.Id, "Привет. Мы пока не знакомы. Напиши @RunGiantBoom чтобы получить доступ к музкомнате.", replyToMessageId: message.MessageId);
+                    //Message mes = mainbot.SendTextMessageAsync(message.Chat.Id, "Привет. Мы пока не знакомы. Напиши @RunGiantBoom чтобы получить доступ к музкомнате.", replyToMessageId: message.MessageId).Result;
                     AdminBot.adminLog("Exception " + ex.Message);
                     return;
                 }
@@ -89,13 +91,27 @@ namespace InnoMusicRoomBot
             switch (message.Text)
             {
                 case "/book":
-                    BookCommand.ReplyWithImageSchedule(message, mainbot, participant);
+                    BookCommand.ReplyWithImageSchedule(message, mainbot, participant, true);
+                    return;
+                case "/book_next_week":
+                    if (participant.Status.Equals("Senior") || participant.Status.Equals("Lord"))
+                    {
+                        BookCommand.ReplyWithImageSchedule(message, mainbot, participant, false);
+                    }
+                    else
+                    {
+                        Message mes = mainbot.SendTextMessageAsync(message.Chat.Id, "Бронирование заранее за неделю доступно только патронов со статусом Senior. Чтобы поддержать нас, переходите на https://www.patreon.com/InnoMusicRoom.", replyToMessageId: message.MessageId).Result;
+                        AdminBot.adminLog("book_next_week not allowed");
+                    }
                     return;
                 case "/book_text_version":
                     BookCommand.ReplyWithTextSchedule(message, mainbot);
                     return;
                 case "/cancel":
-                    CancelCommand.PerformAnswer(message, mainbot, participant);
+                    CancelCommand.PerformAnswer(message, mainbot, participant, true);
+                    return;
+                case "/cancel_next_week":
+                    CancelCommand.PerformAnswer(message, mainbot, participant, false);
                     return;
                 case "/start":
                     StartCommand.PerformAnswer(message, mainbot);
@@ -166,7 +182,8 @@ namespace InnoMusicRoomBot
                 Console.WriteLine($"Count check {i}");
                 // int.MaxValue в микросекундах это 24,86 дня
                 // 5 * 60 * 1000 это 5 минут
-                Thread.Sleep(5 * 60 * 1000);
+                // 60 * 60 * 1000 это 60 минут
+                Thread.Sleep(60 * 60 * 1000);
             }
         }
     }
