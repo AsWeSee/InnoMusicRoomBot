@@ -96,7 +96,7 @@ namespace InnoMusicRoomBot.Tools
             return result;
         }
 
-        private static List<Models.Booking> getBookingsForWeek(bool currentWeek)
+        public static List<Models.Booking> getBookingsForWeek(bool currentWeek)
         {
             DateTime weekStart = BookCommand.weekStartDateForBooking(currentWeek);
             DateTime weekEnd = weekStart.AddDays(+7);

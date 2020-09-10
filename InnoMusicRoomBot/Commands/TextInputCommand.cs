@@ -79,18 +79,38 @@ namespace InnoMusicRoomBot.Commands
             }
 
             //Нужно получить доступное время для бронирования
-            double freetime = BookCommand.maxHoursToBook(participant.Status);
+            double freeDayTime = BookCommand.maxHoursToBookPerDay(participant.Status);
             using (MobileContext db = new MobileContext())
             {
                 var bookings = db.Bookings.Where(c => (c.Participant == participant) && (c.TimeEnd.Year == selectedDay.Year) && (c.TimeEnd.Month == selectedDay.Month) && (c.TimeEnd.Day == selectedDay.Day)).ToList();
                 foreach (var booking in bookings)
                 {
-                    freetime -= (booking.TimeEnd.Subtract(booking.TimeStart).TotalHours);
+                    freeDayTime -= (booking.TimeEnd.Subtract(booking.TimeStart).TotalHours);
                 }
 
-                if (startDateTime.Subtract(endDateTime).TotalHours >= freetime)
+                if (startDateTime.Subtract(endDateTime).TotalHours >= freeDayTime)
                 {
-                    _ = bot.SendTextMessageAsync(chatId, $"Недостаточно доступного времени для бронирования.\n\nВведите время начала и завершения брони. Например \"12:20 14:20\"", replyToMessageId: messageId).Result;
+                    _ = bot.SendTextMessageAsync(chatId, $"Недостаточно доступного времени для бронирования.\n" +
+                        $"Остаток на день {freeDayTime}\n" +
+                        $"\n" +
+                        $"Введите время начала и завершения брони. Например \"12:20 14:20\"", replyToMessageId: messageId).Result;
+                    AdminBot.adminLog("Недостаточно доступного времени для бронирования.");
+                    return;
+                }
+
+                double freeWeekTime = BookCommand.maxHoursToBookPerWeek(participant.Status);
+                var bookingsWeek = FormSchedule.getBookingsForWeek(participant.SelectedCurrentWeek);
+                foreach (var booking in bookingsWeek)
+                {
+                    freeWeekTime -= (booking.TimeEnd.Subtract(booking.TimeStart).TotalHours);
+                }
+
+                if (startDateTime.Subtract(endDateTime).TotalHours >= freeWeekTime)
+                {
+                    _ = bot.SendTextMessageAsync(chatId, $"Недостаточно доступного времени для бронирования.\n" +
+                        $"Остаток на неделю {freeWeekTime}\n" +
+                        $"\n" +
+                        $"Введите время начала и завершения брони. Например \"12:20 14:20\"", replyToMessageId: messageId).Result;
                     AdminBot.adminLog("Недостаточно доступного времени для бронирования.");
                     return;
                 }

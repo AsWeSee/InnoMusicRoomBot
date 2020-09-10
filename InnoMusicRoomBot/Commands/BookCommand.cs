@@ -28,10 +28,25 @@ namespace InnoMusicRoomBot.Commands
             var chatId = message.Chat.Id;
             var messageId = message.MessageId;
 
+            //Нужно получить доступное время для бронирования
+            double freeWeekTime = maxHoursToBookPerWeek(participant.Status);
+            var bookings = FormSchedule.getBookingsForWeek(currentWeek);
+            foreach (var booking in bookings)
+            {
+                freeWeekTime -= (booking.TimeEnd.Subtract(booking.TimeStart).TotalHours);
+            }
+
             InputOnlineFile inputOnlineFile;
             using (FileStream fs = FormSchedule.FormScheduleImage(participant, currentWeek))
             {
-                String caption = $"Ваш статус: {participant.Status}\nДоступно {maxHoursToBook(participant.Status)} часов бронирования в день.\n\nЗелёным цветом выделены те, кто поддерживает музкомнату на patreon. Чтобы поддержать нас, переходите на https://www.patreon.com/InnoMusicRoom. В нём есть разные уровни поддержки с бонусами.";
+                String caption = $"Ваш статус: {participant.Status}\n" +
+                    $"Доступно:\n " +
+                    $"{maxHoursToBookPerDay(participant.Status)} часов бронирования в день.\n" +
+                    $"{maxHoursToBookPerWeek(participant.Status)} часов бронирования в неделю.\n" +
+                    $"Осталось:\n " +
+                    $"{freeWeekTime} часов бронирования в неделю.\n" +
+                    $"\n" +
+                    $"Зелёным цветом выделены те, кто поддерживает музкомнату на patreon. Чтобы поддержать нас, переходите на https://www.patreon.com/InnoMusicRoom. В нём есть разные уровни поддержки с бонусами.";
                 inputOnlineFile = new InputOnlineFile(fs, "schedule.png");
                 Message mes = client.SendPhotoAsync(chatId: chatId, photo: inputOnlineFile, caption: caption, replyToMessageId: messageId, replyMarkup: reply).Result;
             }
@@ -64,7 +79,7 @@ namespace InnoMusicRoomBot.Commands
             DateTime selectedDay = weekStart.AddDays(selectedDateNum);
 
             //Нужно получить доступное время для бронирования
-            double freetime = maxHoursToBook(participant.Status);
+            double freeDaytime = maxHoursToBookPerDay(participant.Status);
             using (MobileContext db = new MobileContext())
             {
                 //var bookingsWeek = db.Bookings.Where(c => (c.Participant == participant) && (c.TimeStart > weekStart) && (c.TimeEnd < weekEnd));
@@ -76,14 +91,16 @@ namespace InnoMusicRoomBot.Commands
                 var bookings = db.Bookings.Where(c => (c.Participant == participant) && (c.TimeEnd.Year == selectedDay.Year) && (c.TimeEnd.Month == selectedDay.Month) && (c.TimeEnd.Day == selectedDay.Day)).ToList();
                 foreach (var booking in bookings)
                 {
-                    freetime -= (booking.TimeEnd.Subtract(booking.TimeStart).TotalHours);
+                    freeDaytime -= (booking.TimeEnd.Subtract(booking.TimeStart).TotalHours);
                 }
 
                 participant.SelectedDate = selectedDay;
                 db.Participants.Update(participant);
                 db.SaveChanges();
             }
-            Message mes = client.SendTextMessageAsync(chatId, $"Доступно часов для бронирования: {freetime}.\nВведите время начала и завершения брони. Например \"12:20 14:20\"", replyToMessageId: messageId).Result;
+            Message mes = client.SendTextMessageAsync(chatId, $"" +
+                $"Доступно часов для бронирования: {freeDaytime}.\n" +
+                $"Введите время начала и завершения брони. Например \"12:20 14:20\"", replyToMessageId: messageId).Result;
         }
 
         //Вынести эти функции в отдельные логичное место
@@ -117,21 +134,42 @@ namespace InnoMusicRoomBot.Commands
 
             return new DateTime(weekStartTemp.Year, weekStartTemp.Month, weekStartTemp.Day);
         }
-        public static int maxHoursToBook(string status)
+        public static int maxHoursToBookPerDay(string status)
         {
             switch (status)
             {
                 case "Lord":
                     return 15;
                 case "Senior":
+                    return 4;
                 case "Investor":
                 case "Junior":
                 case "Middle":
                 case "payer":
-                    return 5;
+                    return 3;
                 case "Freelance":
                 case "free":
                     return 2;
+            }
+            //предусматривать исключение на случай получения некорректного статуса
+            return 0;
+        }
+        public static int maxHoursToBookPerWeek(string status)
+        {
+            switch (status)
+            {
+                case "Lord":
+                    return 150;
+                case "Senior":
+                    return 8;
+                case "Investor":
+                case "Junior":
+                case "Middle":
+                case "payer":
+                    return 6;
+                case "Freelance":
+                case "free":
+                    return 4;
             }
             //предусматривать исключение на случай получения некорректного статуса
             return 0;
