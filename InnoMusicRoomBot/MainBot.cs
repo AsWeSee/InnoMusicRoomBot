@@ -79,7 +79,7 @@ namespace InnoMusicRoomBot
                 }
                 catch (Exception ex)
                 {
-                    Message mes = mainbot.SendTextMessageAsync(message.Chat.Id, "Привет. Мы пока не знакомы. Напиши @RunGiantBoom чтобы получить доступ к музкомнате.", replyToMessageId: message.MessageId).Result;
+                    Message mes = mainbot.SendTextMessageAsync(message.Chat.Id, "Привет. Мы пока не знакомы. Напиши @frodan чтобы получить доступ к музкомнате.", replyToMessageId: message.MessageId).Result;
                     AdminBot.adminLog("Exception " + ex.Message);
                     return;
                 }
