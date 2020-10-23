@@ -22,19 +22,18 @@ namespace InnoMusicRoomBot
         public static List<Command> commands = new List<Command>();
         public MainBot()
         {
-            if (AppSettings.isDevEnvironment)
-            {
-                Console.WriteLine($"proxy enable");
-                ICredentials cread = new NetworkCredential(AppSettings.proxyLogin, AppSettings.proxyPassword);
-                WebProxy proxy = new WebProxy(AppSettings.proxyAddress, false, null, cread);
+            //if (AppSettings.isDevEnvironment)
+            //{
+                //Console.WriteLine($"proxy enable");
+                //ICredentials cread = new NetworkCredential(AppSettings.proxyLogin, AppSettings.proxyPassword);
+                //WebProxy proxy = new WebProxy(AppSettings.proxyAddress, false, null, cread);
 
-                mainbot = new TelegramBotClient(AppSettings.mainKey, proxy);
-            }
-            else
-            {
-                Console.WriteLine($"proxy disable");
-                mainbot = new TelegramBotClient(AppSettings.mainKey);
-            }
+                //mainbot = new TelegramBotClient(AppSettings.mainKey, proxy);
+            //}
+            //else
+            //{
+            mainbot = new TelegramBotClient(AppSettings.mainKey);
+            //}
             Console.WriteLine($"get me main");
             User me = mainbot.GetMeAsync().Result;
             Console.WriteLine($"Hello, World! I am user №{me.Id}, alias {me.Username} and my name is {me.FirstName}.");
@@ -80,8 +79,7 @@ namespace InnoMusicRoomBot
                 }
                 catch (Exception ex)
                 {
-                    mainbot.SendTextMessageAsync(message.Chat.Id, "Привет. Мы пока не знакомы. Напиши @RunGiantBoom чтобы получить доступ к музкомнате.", replyToMessageId: message.MessageId);
-                    //Message mes = mainbot.SendTextMessageAsync(message.Chat.Id, "Привет. Мы пока не знакомы. Напиши @RunGiantBoom чтобы получить доступ к музкомнате.", replyToMessageId: message.MessageId).Result;
+                    Message mes = mainbot.SendTextMessageAsync(message.Chat.Id, "Привет. Мы пока не знакомы. Напиши @RunGiantBoom чтобы получить доступ к музкомнате.", replyToMessageId: message.MessageId).Result;
                     AdminBot.adminLog("Exception " + ex.Message);
                     return;
                 }
@@ -182,7 +180,6 @@ namespace InnoMusicRoomBot
                 Console.WriteLine($"Count check {i}");
                 // int.MaxValue в микросекундах это 24,86 дня
                 // 5 * 60 * 1000 это 5 минут
-                // 60 * 60 * 1000 это 60 минут
                 Thread.Sleep(60 * 60 * 1000);
             }
         }

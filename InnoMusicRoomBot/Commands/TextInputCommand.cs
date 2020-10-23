@@ -53,6 +53,13 @@ namespace InnoMusicRoomBot.Commands
                 endDateTime = temp;
             }
 
+            if (startDateTime < DateTime.UtcNow.AddHours(3))
+            {
+                Message mes = bot.SendTextMessageAsync(message.Chat.Id, $"Время начала раньше текущего {DateTime.UtcNow.AddHours(3)}.", replyToMessageId: message.MessageId).Result;
+                AdminBot.adminLog($"Время начала раньше текущего {DateTime.Now} {DateTime.UtcNow.AddHours(3)}.");
+                return;
+            }
+
             if (startDateTime.Hour < 7)
             {
                 Message mes = bot.SendTextMessageAsync(message.Chat.Id, "Время начала раньше 7 утра. (Время работы спорткомплекса: с 7:00 до 23:00)", replyToMessageId: message.MessageId).Result;
@@ -88,7 +95,7 @@ namespace InnoMusicRoomBot.Commands
                     freeDayTime -= (booking.TimeEnd.Subtract(booking.TimeStart).TotalHours);
                 }
 
-                if (startDateTime.Subtract(endDateTime).TotalHours >= freeDayTime)
+                if (endDateTime.Subtract(startDateTime).TotalHours > freeDayTime)
                 {
                     _ = bot.SendTextMessageAsync(chatId, $"Недостаточно доступного времени для бронирования.\n" +
                         $"Остаток на день {freeDayTime}\n" +
@@ -102,10 +109,11 @@ namespace InnoMusicRoomBot.Commands
                 var bookingsWeek = FormSchedule.getBookingsForWeek(participant.SelectedCurrentWeek);
                 foreach (var booking in bookingsWeek)
                 {
-                    freeWeekTime -= (booking.TimeEnd.Subtract(booking.TimeStart).TotalHours);
+                    if (booking.Participant.Id == participant.Id)
+                        freeWeekTime -= (booking.TimeEnd.Subtract(booking.TimeStart).TotalHours);
                 }
 
-                if (startDateTime.Subtract(endDateTime).TotalHours >= freeWeekTime)
+                if (endDateTime.Subtract(startDateTime).TotalHours > freeWeekTime)
                 {
                     _ = bot.SendTextMessageAsync(chatId, $"Недостаточно доступного времени для бронирования.\n" +
                         $"Остаток на неделю {freeWeekTime}\n" +

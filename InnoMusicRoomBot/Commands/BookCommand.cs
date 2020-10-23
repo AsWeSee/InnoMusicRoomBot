@@ -15,14 +15,6 @@ namespace InnoMusicRoomBot.Commands
 {
     public class BookCommand
     {
-        private static ReplyKeyboardMarkup reply = new ReplyKeyboardMarkup(new[] {
-                    new KeyboardButton("Пн"),
-                    new KeyboardButton("Вт"),
-                    new KeyboardButton("Ср"),
-                    new KeyboardButton("Чт"),
-                    new KeyboardButton("Пт"),
-                    new KeyboardButton("Сб"),
-                    new KeyboardButton("Вс")}, true);
         public static void ReplyWithImageSchedule(Message message, ITelegramBotClient client, Participant participant, bool currentWeek)
         {
             var chatId = message.Chat.Id;
@@ -33,14 +25,15 @@ namespace InnoMusicRoomBot.Commands
             var bookings = FormSchedule.getBookingsForWeek(currentWeek);
             foreach (var booking in bookings)
             {
-                freeWeekTime -= (booking.TimeEnd.Subtract(booking.TimeStart).TotalHours);
+                if (booking.Participant.Id == participant.Id)
+                    freeWeekTime -= (booking.TimeEnd.Subtract(booking.TimeStart).TotalHours);
             }
 
             InputOnlineFile inputOnlineFile;
             using (FileStream fs = FormSchedule.FormScheduleImage(participant, currentWeek))
             {
                 String caption = $"Ваш статус: {participant.Status}\n" +
-                    $"Доступно:\n " +
+                    $"Доступно:\n" +
                     $"{maxHoursToBookPerDay(participant.Status)} часов бронирования в день.\n" +
                     $"{maxHoursToBookPerWeek(participant.Status)} часов бронирования в неделю.\n" +
                     $"Осталось:\n " +
@@ -48,7 +41,7 @@ namespace InnoMusicRoomBot.Commands
                     $"\n" +
                     $"Зелёным цветом выделены те, кто поддерживает музкомнату на patreon. Чтобы поддержать нас, переходите на https://www.patreon.com/InnoMusicRoom. В нём есть разные уровни поддержки с бонусами.";
                 inputOnlineFile = new InputOnlineFile(fs, "schedule.png");
-                Message mes = client.SendPhotoAsync(chatId: chatId, photo: inputOnlineFile, caption: caption, replyToMessageId: messageId, replyMarkup: reply).Result;
+                Message mes = client.SendPhotoAsync(chatId: chatId, photo: inputOnlineFile, caption: caption, replyToMessageId: messageId, replyMarkup: FormReplyMarkup(currentWeek)).Result;
             }
 
             using (MobileContext db = new MobileContext())
@@ -65,7 +58,37 @@ namespace InnoMusicRoomBot.Commands
 
             string text = FormSchedule.FormScheduleText();
             if (text.Equals("")) text = "В расписании пусто";
-            Message mes = client.SendTextMessageAsync(chatId: chatId, text, replyToMessageId: messageId, replyMarkup: reply, parseMode: ParseMode.Markdown).Result;
+            Message mes = client.SendTextMessageAsync(chatId: chatId, text, replyToMessageId: messageId, replyMarkup: FormReplyMarkup(true), parseMode: ParseMode.Markdown).Result;
+        }
+
+        private static ReplyKeyboardMarkup FormReplyMarkup(bool currentWeek)
+        {
+            DateTime weekStart = BookCommand.weekStartDateForBooking(currentWeek);
+            DateTime now = DateTime.UtcNow.AddHours(3);
+
+            double diff = (now - weekStart).TotalDays;
+
+            ReplyKeyboardMarkup result;
+            List<KeyboardButton> buttons = new List<KeyboardButton>();
+
+            if (diff <= 1)
+                buttons.Add(new KeyboardButton("Пн"));
+            if (diff <= 2)
+                buttons.Add(new KeyboardButton("Вт"));
+            if (diff <= 3)
+                buttons.Add(new KeyboardButton("Ср"));
+            if (diff <= 4)
+                buttons.Add(new KeyboardButton("Чт"));
+            if (diff <= 5)
+                buttons.Add(new KeyboardButton("Пт"));
+            if (diff <= 6)
+                buttons.Add(new KeyboardButton("Сб"));
+            if (diff <= 7)
+                buttons.Add(new KeyboardButton("Вс"));
+
+            result = new ReplyKeyboardMarkup(buttons, true);
+
+            return result;
         }
 
         public static void ReplyWithTimeInput(Message message, ITelegramBotClient client, Participant participant, int selectedDateNum)
@@ -143,12 +166,12 @@ namespace InnoMusicRoomBot.Commands
                 case "Senior":
                     return 4;
                 case "Investor":
-                case "Junior":
                 case "Middle":
                 case "payer":
                     return 3;
                 case "Freelance":
                 case "free":
+                case "Junior":
                     return 2;
             }
             //предусматривать исключение на случай получения некорректного статуса
@@ -163,10 +186,10 @@ namespace InnoMusicRoomBot.Commands
                 case "Senior":
                     return 8;
                 case "Investor":
-                case "Junior":
                 case "Middle":
                 case "payer":
                     return 6;
+                case "Junior":
                 case "Freelance":
                 case "free":
                     return 4;

@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Types;
@@ -23,8 +22,18 @@ namespace InnoMusicRoomBot.Commands
             //После чего вывести инлайном клавиатуру со списком броней
             //поймать колбэк запроса
 
-            DateTime weekStart = BookCommand.weekStartDateForBooking(currentWeek);
+            DateTime weekStart;
+            if (currentWeek)
+            {
+                weekStart = DateTime.UtcNow.AddHours(3);
+            }
+            else
+            {
+                weekStart = BookCommand.weekStartDateForBooking(currentWeek);
+            }
             DateTime weekEnd = weekStart.AddDays(+7);
+
+            
 
             List<InlineKeyboardButton> buttons = new List<InlineKeyboardButton>();
             using (MobileContext db = new MobileContext())
